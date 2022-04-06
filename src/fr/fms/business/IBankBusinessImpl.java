@@ -1,8 +1,10 @@
 package fr.fms.business;
 
 import java.util.ArrayList;
+
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Scanner;
 
 import fr.fms.entities.Account;
 import fr.fms.entities.Current;
@@ -145,5 +147,64 @@ public class IBankBusinessImpl implements IBankBusiness {
 			}
 		}
 		if(exist == false)	customer.getListAccounts().add(account);
+	}
+	/** M�thode qui affiche le menu  */
+	@Override
+	public  void showMenu() {
+		System.out.println("Menu :");
+		System.out.print("1.Versement - ");
+		System.out.print("2.Retrait - ");
+		System.out.print("3.Virement - ");
+		System.out.print("4.Information du compte - ");
+		System.out.print("5.Liste des opérations - ");
+		System.out.print("6.Sortir \n");
+	}
+	/** M�thode principale qui s'execute dans le main */
+	@Override
+	public void mainFunction(Scanner scan) {
+
+		int ans=0;
+
+		while(ans != 6) {
+			// Affichage du menu
+			showMenu();
+
+			while(!scan.hasNextInt()) {
+				System.out.println("La valeur rentrée n'était pas du type voulu");
+				scan.next();
+			}
+
+			ans = scan.nextInt();
+
+			switch(ans) {
+			case 1 : // versement sur le compte
+				System.out.println("salut");
+				break;
+
+			case 2 : // retrait
+
+				break;
+
+			case 3 : 	// virement
+
+				break;
+
+			case 4 : 	// informations du compte
+
+				break;
+
+			case 5 : 	// liste des opérations
+
+				break;
+
+			case 6 : // Exit account
+				System.out.println("Exit account.");
+				break;
+
+			default : System.out.println("Mauvaise saisie, votre choix : "+ans+" est inexistant dans le menu");
+			}	
+		}
+
+
 	}
 }

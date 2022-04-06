@@ -1,6 +1,7 @@
 package fr.fms.business;
 
 import java.util.ArrayList;
+import java.util.Scanner;
 
 import fr.fms.entities.Account;
 import fr.fms.entities.Transaction;
@@ -18,4 +19,6 @@ public interface IBankBusiness {
 	public boolean withdraw(long accountId, double amount);				//faire un retrait sur un compte
 	public void transfert(long accIdSrc, long accIdDest, double amount);	//faire un virement d'un compte source vers destination
 	public ArrayList<Transaction> listTransactions(long accountId); 	//renvoi la liste des opérations sur un compte donné
+	public void showMenu();												// affiche le menu gestion de compte
+	public void mainFunction(Scanner scan);											// gère le menu gestion de compte
 }
