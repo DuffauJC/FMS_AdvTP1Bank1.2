@@ -29,7 +29,7 @@ public abstract class Account {
 	
 	@Override
 	public String toString() {
-		return " [accountId=" + accountId + ", creationDate=" + creationDate + ", balance=" + balance + ", \n\t" + customer ;
+		return " [accountId=" + accountId + ", creationDate=" + creationDate + ", balance=" + balance + " ] " ;
 	}
 
 	public Customer getCustomer() {
