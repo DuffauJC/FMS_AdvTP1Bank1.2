@@ -1,10 +1,8 @@
 package fr.fms.business;
 
 import java.util.ArrayList;
-
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Scanner;
 
 import fr.fms.entities.Account;
 import fr.fms.entities.Current;
@@ -20,9 +18,12 @@ import fr.fms.entities.withdrawal;
 public class IBankBusinessImpl implements IBankBusiness {
 	private HashMap<Long,Account>	accounts;
 	private HashMap<Long,Customer>	customers;
-	
-	private long numTransactions;
 
+	private long numTransactions;
+	
+/**
+ * constructeur
+ */
 	public IBankBusinessImpl() {
 		accounts = new HashMap<Long,Account>();		
 		customers = new HashMap<Long,Customer>();
@@ -50,16 +51,23 @@ public class IBankBusinessImpl implements IBankBusiness {
 	@Override
 	public Account consultAccount(long accountId){		
 		Account account = accounts.get(accountId);
+		if(account == null) {
+			throw new RuntimeException("Inexistant Account");
+		} else {
 
-		return account;
+			return account;
+		}
+
 	}
 
 	/**
-	 * méthode qui effectue le versement d'un montant sur un compte déjà verifié
+	 * méthode qui effectue le versement d'un montant sur un compte à verifié
 	 * @param amount correspond au montant à verser
+	 * @throws Exception 
 	 */
 	@Override
-	public void pay(Account account, double amount) {				// versement
+	public void pay(long accountId, double amount) {				// versement
+		Account account =consultAccount(accountId);
 		account.setBalance(account.getBalance() + amount);
 		System.out.println("Le montant de "+amount+" a bien été verser.");
 		System.out.println("Nouveau solde du compte numéro : "+account.getAccountId()+" - "+account.getBalance());
@@ -68,13 +76,13 @@ public class IBankBusinessImpl implements IBankBusiness {
 	}
 
 	/**
-	 * méthode qui effectue le retrait d'un montant sur un compte vérifié tout en gérant le découvert autorisé qqsoit le compte
+	 * méthode qui effectue le retrait d'un montant sur un compte à vérifié tout en gérant le découvert autorisé qqsoit le compte
 	 * @param account correspond au compte sur lequel effectuer le retrait
 	 * @param amount correspond au montant à retirer 
 	 */
 	@Override
-	public boolean withdraw(Account account, double amount)throws Exception {			//retrait
-
+	public boolean withdraw(long accountId, double amount) {			//retrait
+		Account account =consultAccount(accountId);
 		double capacity = 0;
 		if(account instanceof Current) {
 			capacity = account.getBalance() + ((Current)account).getOverdraft();	//solde + decouvert autorisé				
@@ -88,7 +96,7 @@ public class IBankBusinessImpl implements IBankBusiness {
 			account.getListTransactions().add(trans);		// création + ajout d'une opération de retrait
 		}
 		else {
-			throw new Exception("vous avez dépassé vos capacités de retrait !");
+			throw new RuntimeException("vous avez dépassé vos capacités de retrait !");
 		}
 
 		return true;	//retrait effectué
@@ -96,33 +104,24 @@ public class IBankBusinessImpl implements IBankBusiness {
 
 	/**
 	 * méthode qui effectue un virement d'un compte src vers un compte dest, décomposé en 2 étapes : retrait puis versement
-	 * @param account correspond au compte source
+	 * @param accountId correspond à l'id du compte source
 	 * @param accIdSrc correspond à l'id du compte destinataire
 	 * @param amount correspond au montant à virer
+	 * @throws Exception
 	 */
 	@Override
-	public void transfert(Account account, long accIdDest, double amount)throws Exception {	//virement
-		// verif compte destinataire
+	public void transfert(long accountId, long accIdDest, double amount)throws Exception {	//virement
+
+		//verif si compte destinataire est valide
 		Account acc=consultAccount(accIdDest);
-		if(acc == null) {
-			throw new Exception("Inexistant Destinary Account");
-		} else {
-			// verif si compte identique
-			if(account.getAccountId() == accIdDest)	throw new Exception("vous ne pouvez retirer et verser sur le même compte !");
-			else {
-				try {
-					if(withdraw(account, amount)) {		//retrait si c'est possible
-						pay(account, amount);				//alors versement
-					}
-					//else System.out.println("virement impossible");
-				} catch (Exception e) {
-					System.out.println(e.getMessage());
+		if(acc ==null) throw new Exception("Compte destinataire inexistant !");
+		// verif si compte identique
+		if(accountId == accIdDest)	throw new Exception("vous ne pouvez retirer et verser sur le même compte !");
 
-				}
-			}
-		}
-
+		withdraw(accountId, amount);		//retrait  - exception gérée dans la méthode
+		pay(accIdDest, amount);			// versement - exception gérée dans la méthode
 	}
+
 
 	/**
 	 * Renvoi la liste des transactions sur un compte
@@ -131,6 +130,7 @@ public class IBankBusinessImpl implements IBankBusiness {
 	 */
 	@Override
 	public ArrayList<Transaction> listTransactions(long accountId) {
+
 		return consultAccount(accountId).getListTransactions();
 	}
 
@@ -156,126 +156,6 @@ public class IBankBusinessImpl implements IBankBusiness {
 			}
 		}
 		if(exist == false)	customer.getListAccounts().add(account);
-	}
-	/**
-	 * Verfie si le compte existe.
-	 */
-	public void verifyAccount(long accountId,Scanner scan) throws Exception {
-
-		Account acc=consultAccount(accountId);
-		if(acc == null) {
-			throw new Exception("Inexistant Account");
-		} else {
-
-			mainFunction(scan,acc);
-		}
-	}
-
-	/** M�thode qui affiche le menu  */
-	@Override
-	public  void showMenu() {
-
-		System.out.print("1.Versement - ");
-		System.out.print("2.Retrait - ");
-		System.out.print("3.Virement - ");
-		System.out.print("4.Information du compte - ");
-		System.out.print("5.Liste des opérations - ");
-		System.out.print("6.Sortir \n");
-	}
-	/** M�thode principale qui s'execute dans le main */
-	@Override
-	public void mainFunction(Scanner scan,Account account) {
-
-		int ans=0;
-		long amount;
-		long accIdDest;
-
-		String name= account.getCustomer().getFirstName();
-		System.out.println("Bienvenue "+name.toUpperCase()+" que souhaitez-vous faire ?");
-
-		while(ans != 6) {
-			// Affichage du menu
-			showMenu();
-
-			while(!scan.hasNextInt()) {
-				System.out.println("La valeur rentrée n'était pas du type voulu");
-				scan.next();
-			}
-
-			ans = scan.nextInt();
-
-			switch(ans) {
-			case 1 : // versement sur le compte
-				System.out.println("Tapez le montant à ajouter.");
-
-				while(!scan.hasNextLong()) {
-					System.out.println("La valeur rentrée est incorrecte, saisir une nouvelle entrée.");
-					scan.next();
-				}
-				amount =scan.nextLong();
-				pay(account, amount);
-				break;
-
-			case 2 : // retrait
-				System.out.println("Tapez le montant à retiré.");
-
-				while(!scan.hasNextLong()) {
-					System.out.println("La valeur rentrée est incorrecte, saisir une nouvelle entrée.");
-					scan.next();
-				}
-				amount =scan.nextLong();
-				try {
-					withdraw(account, amount);
-				} catch (Exception e) {
-					System.out.println(e.getMessage());
-
-				}
-				break;
-
-			case 3 : 	// virement
-				System.out.println("Tapez le montant à viré, ainsi que le numéro de compte destinaire.");
-
-				while(!scan.hasNextLong()) {
-					System.out.println("La valeur rentrée est incorrecte, saisir une nouvelle entrée.");
-					scan.next();
-				}
-				amount =scan.nextLong();
-				accIdDest=scan.nextLong();
-				try {
-					transfert( account, accIdDest, amount);
-				} catch (Exception e) {
-					System.out.println(e.getMessage());
-
-				}
-
-				break;
-
-			case 4 : 	// informations du compte
-				System.out.println("Informations du compte : ");
-				System.out.println("-------------------------------------------------------");
-				System.out.println(account.toString());
-				System.out.println("-------------------------------------------------------");
-
-				break;
-
-			case 5 : 	// liste des opérations
-				System.out.println("Opérations du compte : ");
-				System.out.println("-------------------------------------------------------");
-				for(Transaction trans : listTransactions(account.getAccountId()))
-					  System.out.println(trans);
-					
-				System.out.println("-------------------------------------------------------");
-			
-				break;
-
-			case 6 : // Exit account
-				System.out.println("Exit account.");
-				break;
-
-			default : System.out.println("Mauvaise saisie, votre choix : "+ans+" est inexistant dans le menu");
-			}	
-		}
-
 	}
 
 }
